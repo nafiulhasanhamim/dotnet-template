@@ -489,3 +489,4 @@ D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\obj\Debu
 D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\obj\Debug\net8.0\dotnet-mvc.pdb
 D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\obj\Debug\net8.0\dotnet-mvc.genruntimeconfig.cache
 D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\obj\Debug\net8.0\ref\dotnet-mvc.dll
+D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\obj\Debug\net8.0\dotnet-mvc.sourcelink.json

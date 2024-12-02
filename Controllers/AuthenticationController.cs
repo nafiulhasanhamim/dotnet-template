@@ -7,9 +7,11 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using api.Controllers;
+using dotnet_mvc.DTOs;
 using dotnet_mvc.Interfaces;
 using dotnet_mvc.Models;
 using dotnet_mvc.Models.Authentication.Login;
+using dotnet_mvc.Models.Authentication.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,36 +27,37 @@ namespace dotnet_mvc.Controllers
         // private readonly UserManager<IdentityUser> _userManager;
         private readonly UserManager<ApplicationUser> _userManager;
         // private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConfiguration _configuration;
+        // private readonly SignInManager<ApplicationUser> _signInManager;
+        // private readonly RoleManager<IdentityRole> _roleManager;
+        // private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IUserManagement _user;
 
 
         // public AuthenticationController(UserManager<IdentityUser> userManager,
         public AuthenticationController(UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager, IConfiguration configuration, 
+            // RoleManager<IdentityRole> roleManager,
             // IEmailService emailService, SignInManager<IdentityUser> signInManager, IUserManagement user)
-            IEmailService emailService, SignInManager<ApplicationUser> signInManager, IUserManagement user)
+            // SignInManager<ApplicationUser> signInManager
+            IEmailService emailService, IUserManagement user
+            )
         {
             _userManager = userManager;
             _user = user;
-            _roleManager = roleManager;
-            _configuration = configuration;
+            // _roleManager = roleManager;
             _emailService = emailService;
-            _signInManager = signInManager;
+            // _signInManager = signInManager;
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterUser registerUser)
         {
             var tokenResponse = await _user.CreateUserWithTokenAsync(registerUser);
             var confirmationLink = Url.Action(nameof(ConfirmEmail), "Authentication", new { tokenResponse.Response!.Token, email = registerUser.Email }, Request.Scheme);
-                var message = new Message(new string[] { registerUser.Email! }, "Confirmation email link", confirmationLink!);
-                _emailService.SendEmail(message);
+            var message = new Message(new string[] { registerUser.Email! }, "Confirmation email link", confirmationLink!);
+            _emailService.SendEmail(message);
 
-                return ApiResponse.Success( $"User created & Email Sent to {registerUser.Email} SuccessFully");                  
+            return ApiResponse.Success($"User created & Email Sent to {registerUser.Email} SuccessFully");
         }
 
         [HttpGet("ConfirmEmail")]
@@ -66,18 +69,18 @@ namespace dotnet_mvc.Controllers
                 var result = await _userManager.ConfirmEmailAsync(user, token);
                 if (result.Succeeded)
                 {
-                    return ApiResponse.Success( "Email Verified Successfully");
+                    return ApiResponse.Success("Email Verified Successfully");
                 }
             }
-            return ApiResponse.BadRequest( "This User Doesnot exist!");
+            return ApiResponse.BadRequest("This User Doesnot exist!");
         }
 
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
-            var loginOtpResponse=await _user.GetOtpByLoginAsync(loginModel);
-            if (loginOtpResponse.Response!=null)
+            var loginOtpResponse = await _user.GetOtpByLoginAsync(loginModel);
+            if (loginOtpResponse.Response != null)
             {
                 var user = loginOtpResponse.Response.User;
                 if (user.TwoFactorEnabled)
@@ -90,74 +93,36 @@ namespace dotnet_mvc.Controllers
                 }
                 if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password!))
                 {
-                    var authClaims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, user.UserName!),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    };
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    foreach (var role in userRoles)
-                    {
-                        authClaims.Add(new Claim(ClaimTypes.Role, role));
-                    }
-                    var jwtToken = GetToken(authClaims);
+                    var serviceResponse = await _user.GetJwtTokenAsync(user);
+                    return ApiResponse.Success(serviceResponse);
+                }
 
-                    return Ok(new
-                    {
-                        token = new JwtSecurityTokenHandler().WriteToken(jwtToken),
-                        expiration = jwtToken.ValidTo
-                    });
-        }
+            }
+
+            return Unauthorized();
 
         }
-
-        return Unauthorized();
-
-        }  
 
         [HttpPost]
         [Route("login-2FA")]
-        public async Task<IActionResult> LoginWithOTP(string code,string username)
+        public async Task<IActionResult> LoginWithOTP(LoginWithOTPDTO loginWithOTP)
         {
-            var user = await _userManager.FindByNameAsync(username);
-            var signIn= await _signInManager.TwoFactorSignInAsync("Email", code, false, false);
-            if (signIn.Succeeded)
+            var jwt = await _user.LoginUserWithJWTokenAsync(loginWithOTP.Code, loginWithOTP.Username);
+            if (jwt.IsSuccess)
             {
-                if (user != null )
-                {
-                    var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName!),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id!),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                };
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    foreach (var role in userRoles)
-                    {
-                        authClaims.Add(new Claim(ClaimTypes.Role, role));
-                    }
+                return ApiResponse.Success(jwt);
 
-                    var jwtToken = GetToken(authClaims);
-
-                    return Ok(new
-                    {
-                        token = new JwtSecurityTokenHandler().WriteToken(jwtToken),
-                        expiration = jwtToken.ValidTo
-                    });
-                    //returning the token...
-
-                }
             }
-            return ApiResponse.BadRequest("Invalid Code");
+            return ApiResponse.BadRequest("Invalid code");
         }
-       
-       [HttpPost]
-       [AllowAnonymous]
-       [Route("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([Required] string email) 
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([Required] string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if(user != null) 
+            if (user != null)
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var forgotPasswordLink = Url.Action(nameof(ResetPassword), "Authentication", new { token, email = user.Email }, Request.Scheme);
@@ -170,26 +135,27 @@ namespace dotnet_mvc.Controllers
 
         [HttpGet("reset-password")]
 
-        public async Task<IActionResult> ResetPassword(string token, string email) 
+        public async Task<IActionResult> ResetPassword(string token, string email)
         {
-            var model = new ResetPassword { Token = token, Email = email};
-            return Ok(new {
+            var model = new ResetPassword { Token = token, Email = email };
+            return Ok(new
+            {
                 model
             });
         }
 
         [HttpPost]
-       [AllowAnonymous]
-       [Route("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPassword resetPassword) 
+        [AllowAnonymous]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPassword resetPassword)
         {
             var user = await _userManager.FindByEmailAsync(resetPassword.Email);
-            if(user != null) 
+            if (user != null)
             {
                 var resetPassResult = await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.Password);
-                if(!resetPassResult.Succeeded)
+                if (!resetPassResult.Succeeded)
                 {
-                    foreach(var error in resetPassResult.Errors)
+                    foreach (var error in resetPassResult.Errors)
                     {
                         ModelState.AddModelError(error.Code, error.Description);
                     }
@@ -200,21 +166,17 @@ namespace dotnet_mvc.Controllers
             return ApiResponse.BadRequest("Something wrong..Try Again");
         }
 
-
-        private JwtSecurityToken GetToken(List<Claim> authClaims)
+        [HttpPost]
+        [Route("Refresh-Token")]
+        public async Task<IActionResult> RefreshToken(LoginResponse tokens)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["JWT:ValidIssuer"],
-                audience: _configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddDays(2),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
-
-            return token;
+            var jwt = await _user.RenewAccessTokenAsync(tokens);
+            if (jwt.IsSuccess)
+            {
+                return ApiResponse.Success(jwt);
+            }
+            return ApiResponse.BadRequest("Invalid Code");
         }
-    
-}
+
+    }
 }
