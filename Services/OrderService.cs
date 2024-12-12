@@ -8,20 +8,30 @@ using dotnet_mvc.data;
 using dotnet_mvc.DTOs;
 using dotnet_mvc.Interfaces;
 using dotnet_mvc.Models;
+using dotnet_mvc.SignalRHub;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 namespace dotnet_mvc.Services
 {
-    public class OrderService: IOrderService
+    public class OrderService : IOrderService
     {
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
-        public OrderService(AppDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<DemoHub> _hubContext1;
+
+        public OrderService(AppDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager,
+         IHubContext<NotificationHub> hubContext,
+         IHubContext<DemoHub> hubContext1
+         )
         {
             _context = context;
             _mapper = mapper;
             _userManager = userManager;
+            _hubContext = hubContext;
+            _hubContext1 = hubContext1;
         }
         // Get all orders with related data
         public async Task<IEnumerable<OrderReadDto>> GetAllOrdersAsync()
@@ -59,7 +69,7 @@ namespace dotnet_mvc.Services
             await _context.SaveChangesAsync();
 
             foreach (var orderedProductDto in orderDto.OrderedProducts)
-            {                
+            {
                 var orderedProduct = _mapper.Map<OrderedProduct>(orderedProductDto);
                 orderedProduct.OrderId = order.OrderId;
                 orderedProduct.OrderedProductId = Guid.NewGuid();
@@ -74,7 +84,15 @@ namespace dotnet_mvc.Services
                 .Include(o => o.User)
                 .FirstOrDefaultAsync(o => o.OrderId == order.OrderId);
 
+            await _hubContext1.Clients.All.SendAsync("ReceiveMessage", "connected");
+            await NotifyUser(orderDto);
+            // await _hubContext.Clients.All.SendAsync("ReceiveMessage", orderDto);
             return _mapper.Map<OrderReadDto>(createdOrder);
+        }
+
+        public async Task NotifyUser(OrderCreateDto orderDto)
+        {
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", orderDto);
         }
 
     }

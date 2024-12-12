@@ -3,6 +3,7 @@ using dotnet_mvc.data;
 using dotnet_mvc.Interfaces;
 using dotnet_mvc.Models;
 using dotnet_mvc.Services;
+using dotnet_mvc.SignalRHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,9 @@ builder.Services.AddScoped<IUserManagement, UserManagementService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 //add automapper service
-builder.Services.AddAutoMapper(typeof (Program));
+builder.Services.AddAutoMapper(typeof(Program));
+//signalR
+builder.Services.AddSignalR();
 
 //database connection
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -43,6 +46,18 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.Configure<IdentityOptions>(
     opts => opts.SignIn.RequireConfirmedEmail = true
     );
+
+//configure the CORS policy
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("reactApp", builder =>
+    {
+        builder.WithOrigins("http://localhost:5000/")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+});
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(10));
 // Adding Authentication
@@ -69,25 +84,28 @@ builder.Services.AddAuthentication(options =>
 var emailConfig = configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 builder.Services.AddSingleton(emailConfig);
 
-
 //add controller services
 builder.Services.AddControllers();
-builder.Services.Configure<ApiBehaviorOptions>(options => {
-    options.InvalidModelStateResponseFactory = context => {
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
         var errors = context.ModelState
                 .Where(e => e.Value!.Errors.Count > 0)
-                .Select(e => new {
+                .Select(e => new
+                {
                     Field = e.Key,
                     Errors = e.Value!.Errors.Select(x => x.ErrorMessage).ToArray()
 
                 }).ToList();
-                
-                var errorString = string.Join("; ", errors.Select(e => $"{e.Field} : {string.Join(", ", e.Errors)}"));
 
-                return new BadRequestObjectResult(new {
-                    Message = "Validation failed",
-                    Errors = errors
-                });
+        var errorString = string.Join("; ", errors.Select(e => $"{e.Field} : {string.Join(", ", e.Errors)}"));
+
+        return new BadRequestObjectResult(new
+        {
+            Message = "Validation failed",
+            Errors = errors
+        });
     };
 });
 
@@ -132,5 +150,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+//signalR setup
+app.MapHub<DemoHub>("/demoHub");
+app.MapHub<NotificationHub>("/notificationHub");
 app.MapControllers();
+//CORS setup
+app.UseCors("reactApp");
 app.Run();

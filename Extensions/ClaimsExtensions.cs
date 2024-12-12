@@ -14,6 +14,8 @@ namespace dotnet_mvc.Extensions
 
         public static string? GetUserId(this ClaimsPrincipal user)
         {
+            Console.WriteLine("claimprincipal");
+            Console.WriteLine(user.Claims.SingleOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value);
             return user.Claims.SingleOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
         }
 
