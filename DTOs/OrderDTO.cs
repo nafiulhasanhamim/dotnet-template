@@ -22,5 +22,13 @@ namespace dotnet_mvc.DTOs
         public string Email { get; set; } = null!; // User email
     }
 
+    public class EventDTO
+    {
+        public Guid OrderId { get; set; }
+        public string ProductId { get; set; }
+
+        public string UserId { get; set; }
+        public int Quantity { get; set; }
+    }
 
 }

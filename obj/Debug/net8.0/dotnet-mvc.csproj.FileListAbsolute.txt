@@ -507,3 +507,5 @@ D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\bin\Debu
 D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\bin\Debug\net8.0\System.Text.Json.dll
 D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\bin\Debug\net8.0\System.Threading.Channels.dll
 D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
+D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\bin\Debug\net8.0\Newtonsoft.Json.dll
+D:\FullStack\.net\dotnet-template-mvc-with-authentication-authorization\bin\Debug\net8.0\RabbitMQ.Client.dll

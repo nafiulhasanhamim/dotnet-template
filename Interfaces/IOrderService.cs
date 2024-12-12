@@ -11,5 +11,6 @@ namespace dotnet_mvc.Interfaces
         Task<IEnumerable<OrderReadDto>> GetAllOrdersAsync();
         Task<OrderReadDto?> GetOrderByIdAsync(Guid id);
         Task<OrderReadDto> CreateOrderAsync(OrderCreateDto orderDto, string userId);
+        Task NotificationHandling(EventDTO orderDto);
     }
 }

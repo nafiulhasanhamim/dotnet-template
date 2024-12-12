@@ -94,6 +94,12 @@ namespace dotnet_mvc.Services
         {
             await _hubContext.Clients.All.SendAsync("ReceiveMessage", orderDto);
         }
+        public async Task NotificationHandling(EventDTO orderDto)
+        {
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", orderDto);
+            await _hubContext1.Clients.All.SendAsync("ReceiveMessage", orderDto);
+        }
+        
 
     }
 }

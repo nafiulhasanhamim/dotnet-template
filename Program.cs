@@ -2,6 +2,7 @@ using System.Text;
 using dotnet_mvc.data;
 using dotnet_mvc.Interfaces;
 using dotnet_mvc.Models;
+using dotnet_mvc.RabbitMQ;
 using dotnet_mvc.Services;
 using dotnet_mvc.SignalRHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +27,10 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IUserManagement, UserManagementService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+//RabbitMQ
+builder.Services.AddSingleton<IRabbmitMQCartMessageSender, RabbmitMQCartMessageSender>();
+builder.Services.AddHostedService<RabbitMQConsumer>();
 
 //add automapper service
 builder.Services.AddAutoMapper(typeof(Program));
