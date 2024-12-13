@@ -40,7 +40,7 @@ namespace dotnet_mvc.Controllers
             return ApiResponse.Success(order);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> CreateOrder(OrderCreateDto orderDto)
         {

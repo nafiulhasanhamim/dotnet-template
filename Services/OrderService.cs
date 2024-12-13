@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using AutoMapper;
 using dotnet_mvc.data;
 using dotnet_mvc.DTOs;
@@ -21,10 +16,12 @@ namespace dotnet_mvc.Services
         private readonly IMapper _mapper;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly IHubContext<DemoHub> _hubContext1;
+        private readonly IHubContext<AdminHub> _hubContext2;
 
         public OrderService(AppDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager,
          IHubContext<NotificationHub> hubContext,
-         IHubContext<DemoHub> hubContext1
+         IHubContext<DemoHub> hubContext1,
+         IHubContext<AdminHub> hubContext2
          )
         {
             _context = context;
@@ -32,6 +29,7 @@ namespace dotnet_mvc.Services
             _userManager = userManager;
             _hubContext = hubContext;
             _hubContext1 = hubContext1;
+            _hubContext2 = hubContext2;
         }
         // Get all orders with related data
         public async Task<IEnumerable<OrderReadDto>> GetAllOrdersAsync()
@@ -84,9 +82,11 @@ namespace dotnet_mvc.Services
                 .Include(o => o.User)
                 .FirstOrDefaultAsync(o => o.OrderId == order.OrderId);
 
-            await _hubContext1.Clients.All.SendAsync("ReceiveMessage", "connected");
-            await NotifyUser(orderDto);
+            // await NotifyUser(orderDto);
             // await _hubContext.Clients.All.SendAsync("ReceiveMessage", orderDto);
+            await _hubContext.Clients.Group($"user:{userId}").SendAsync("ReceiveMessage", orderDto);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveMessage", "New Order is Placed");
+
             return _mapper.Map<OrderReadDto>(createdOrder);
         }
 
