@@ -1,11 +1,11 @@
 using System.Text;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
+
 namespace dotnet_mvc.RabbitMQ
 {
     public class RabbmitMQCartMessageSender : IRabbmitMQCartMessageSender
     {
-
         private readonly string _hostName;
         private readonly string _username;
         private readonly string _password;
@@ -18,17 +18,33 @@ namespace dotnet_mvc.RabbitMQ
             _username = "guest";
         }
 
-        public void SendMessage(object message, string queueName)
+        public void SendMessage(object message, string exchangeName = "DefaultExchange")
         {
+            if (string.IsNullOrEmpty(exchangeName))
+            {
+                throw new ArgumentException("Exchange name cannot be null or empty.", nameof(exchangeName));
+            }
+
             if (ConnectionExists())
             {
                 using var channel = _connection.CreateModel();
-                channel.QueueDeclare(queueName, false, false, false, null);
+
+                // Dynamically declare the exchange
+                channel.ExchangeDeclare(exchange: exchangeName, type: ExchangeType.Fanout);
+
+                // Serialize the message to JSON
                 var json = JsonConvert.SerializeObject(message);
                 var body = Encoding.UTF8.GetBytes(json);
-                channel.BasicPublish(exchange: "", routingKey: queueName, null, body: body);
-            }
 
+                // Publish the message to the dynamic exchange
+                channel.BasicPublish(
+                    exchange: exchangeName,
+                    routingKey: "", // Routing key is ignored for fanout exchanges
+                    basicProperties: null,
+                    body: body
+                );
+
+            }
         }
 
         private void CreateConnection()
@@ -46,7 +62,7 @@ namespace dotnet_mvc.RabbitMQ
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine($"Could not create connection: {ex.Message}");
             }
         }
 
@@ -56,8 +72,9 @@ namespace dotnet_mvc.RabbitMQ
             {
                 return true;
             }
+
             CreateConnection();
-            return true;
+            return _connection != null;
         }
     }
 }
