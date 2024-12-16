@@ -18,9 +18,6 @@ var builder = WebApplication.CreateBuilder(args);
 // For Entity Framework
 var configuration = builder.Configuration;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-
 // builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -31,6 +28,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 //RabbitMQ
 builder.Services.AddSingleton<IRabbmitMQCartMessageSender, RabbmitMQCartMessageSender>();
 builder.Services.AddHostedService<RabbitMQConsumer>();
+
+//background job
+builder.Services.AddHostedService<BackgroundServices>();
 
 //add automapper service
 builder.Services.AddAutoMapper(typeof(Program));
@@ -83,6 +83,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = configuration["JWT:ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
     };
+
     options.Events = new JwtBearerEvents
     {
         //for signalHub
