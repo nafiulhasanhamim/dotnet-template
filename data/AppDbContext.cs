@@ -21,7 +21,6 @@ namespace dotnet_mvc.data
             .HasOne(o => o.User)
             .WithMany(u => u.Orders)
             .HasForeignKey(o => o.UserId);
-
         }
 
         private static void SeedRoles(ModelBuilder builder)
