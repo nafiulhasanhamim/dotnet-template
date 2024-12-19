@@ -94,11 +94,11 @@ namespace dotnet_mvc.RabbitMQ
         private readonly string _password;
         private IConnection _connection;
 
-        public RabbmitMQCartMessageSender()
+        public RabbmitMQCartMessageSender(IConfiguration configuration)
         {
-            _hostName = "localhost";
-            _password = "guest";
-            _username = "guest";
+            _hostName = configuration.GetSection("RabbitMQ")["HostName"];
+            _password = configuration.GetSection("RabbitMQ")["password"];
+            _username = configuration.GetSection("RabbitMQ")["guest"];
         }
 
         public void SendMessage(object message, string name, string type)
