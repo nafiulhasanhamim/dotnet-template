@@ -100,6 +100,7 @@ namespace dotnet_mvc.RabbitMQ
 
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
+            _channel.QueueDeclare("demo", false, false, false, null);
             _channel.ExchangeDeclare(exchange: "OrderExchange", type: ExchangeType.Fanout);
         }
 
@@ -109,13 +110,38 @@ namespace dotnet_mvc.RabbitMQ
             var queueName = _channel.QueueDeclare().QueueName;
             _channel.QueueBind(queue: queueName, exchange: "OrderExchange", routingKey: "");
 
-            CreateConsumer(queueName, async (message) =>
-            {
-                var eventMessage = JsonSerializer.Deserialize<EventDTO>(message);
-            });
+            // CreateConsumer(queueName, async (message) =>
+            // {
+            //     var eventMessage = JsonSerializer.Deserialize<EventDTO>(message);
+            //     if (eventMessage == null)
+            //     {
+            //         return;
+            //     }
+            //     // using (var scope = _serviceProvider.CreateScope())
+            //     // {
+            //     //     var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            //     //     emailService.SendEmail(messages);
+            //     // }
+            // });
+
+            // CreateConsumer("demo", async (message) =>
+            // {
+                // var eventMessage = JsonSerializer.Deserialize<EventDTO>(message);
+                // if (eventMessage == null)
+                // {
+                //     return;
+                // }
+                // // using (var scope = _serviceProvider.CreateScope())
+                // // {
+                // //     var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                // //     emailService.SendEmail(messages);
+                // // }
+            // });
 
             return Task.CompletedTask;
         }
+
+        
 
         private void CreateConsumer(string queueName, Func<string, Task> processMessage)
         {

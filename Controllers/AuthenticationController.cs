@@ -12,6 +12,7 @@ using dotnet_mvc.Interfaces;
 using dotnet_mvc.Models;
 using dotnet_mvc.Models.Authentication.Login;
 using dotnet_mvc.Models.Authentication.User;
+using dotnet_mvc.RabbitMQ;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,7 @@ namespace dotnet_mvc.Controllers
         // private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IUserManagement _user;
+        private readonly IRabbmitMQCartMessageSender _messageBus;
 
 
         // public AuthenticationController(UserManager<IdentityUser> userManager,
@@ -39,13 +41,15 @@ namespace dotnet_mvc.Controllers
             // RoleManager<IdentityRole> roleManager,
             // IEmailService emailService, SignInManager<IdentityUser> signInManager, IUserManagement user)
             // SignInManager<ApplicationUser> signInManager
-            IEmailService emailService, IUserManagement user
+            IEmailService emailService, IUserManagement user,
+            IRabbmitMQCartMessageSender messageBus
             )
         {
             _userManager = userManager;
             _user = user;
             // _roleManager = roleManager;
             _emailService = emailService;
+            _messageBus = messageBus;
             // _signInManager = signInManager;
         }
 
@@ -56,7 +60,6 @@ namespace dotnet_mvc.Controllers
             var confirmationLink = Url.Action(nameof(ConfirmEmail), "Authentication", new { tokenResponse.Response!.Token, email = registerUser.Email }, Request.Scheme);
             var message = new Message(new string[] { registerUser.Email! }, "Confirmation email link", confirmationLink!);
             _emailService.SendEmail(message);
-
             return ApiResponse.Success($"User created & Email Sent to {registerUser.Email} SuccessFully");
         }
 
@@ -88,7 +91,6 @@ namespace dotnet_mvc.Controllers
                     var token = loginOtpResponse.Response.Token;
                     var message = new Message(new string[] { user.Email! }, "OTP Confrimation", token);
                     _emailService.SendEmail(message);
-
                     return ApiResponse.Success($"We have sent an OTP to your Email {user.Email}");
                 }
                 if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password!))
