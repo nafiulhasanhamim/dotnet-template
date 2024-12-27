@@ -87,17 +87,16 @@ namespace dotnet_mvc.RabbitMQ
         private IConnection _connection;
         private IModel _channel;
 
-        public RabbitMQConsumer(IServiceProvider serviceProvider)
+        public RabbitMQConsumer(IServiceProvider serviceProvider, IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
 
             var factory = new ConnectionFactory
             {
-                HostName = "localhost",
-                UserName = "guest",
-                Password = "guest"
+                HostName = configuration.GetSection("RabbitMQ")["HostName"],
+                UserName = configuration.GetSection("RabbitMQ")["UserName"],
+                Password = configuration.GetSection("RabbitMQ")["Password"],
             };
-
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
             _channel.QueueDeclare("demo", false, false, false, null);
@@ -126,22 +125,22 @@ namespace dotnet_mvc.RabbitMQ
 
             // CreateConsumer("demo", async (message) =>
             // {
-                // var eventMessage = JsonSerializer.Deserialize<EventDTO>(message);
-                // if (eventMessage == null)
-                // {
-                //     return;
-                // }
-                // // using (var scope = _serviceProvider.CreateScope())
-                // // {
-                // //     var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                // //     emailService.SendEmail(messages);
-                // // }
+            // var eventMessage = JsonSerializer.Deserialize<EventDTO>(message);
+            // if (eventMessage == null)
+            // {
+            //     return;
+            // }
+            // // using (var scope = _serviceProvider.CreateScope())
+            // // {
+            // //     var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            // //     emailService.SendEmail(messages);
+            // // }
             // });
 
             return Task.CompletedTask;
         }
 
-        
+
 
         private void CreateConsumer(string queueName, Func<string, Task> processMessage)
         {

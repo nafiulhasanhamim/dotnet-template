@@ -4,6 +4,7 @@ using dotnet_mvc.Interfaces;
 using dotnet_mvc.Models;
 using dotnet_mvc.RabbitMQ;
 using dotnet_mvc.Services;
+using dotnet_mvc.Services.Caching;
 using dotnet_mvc.SignalRHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,8 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IUserManagement, UserManagementService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+//for redis
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
 //RabbitMQ
 builder.Services.AddSingleton<IRabbmitMQCartMessageSender, RabbmitMQCartMessageSender>();
@@ -39,6 +42,14 @@ builder.Services.AddSignalR();
 //database connection
 builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+//for redis
+builder.Services.AddStackExchangeRedisCache(option =>
+{
+    option.Configuration = builder.Configuration.GetConnectionString("Redis");
+    option.InstanceName = "ecommerce";
+});
+
 
 // For Identity
 // builder.Services.AddIdentity<IdentityUser, IdentityRole>()
