@@ -1,0 +1,5 @@
+2025-02-01 22:35:06.939 +06:00 [INF] Starting MyApp...
+2025-02-01 22:35:44.490 +06:00 [WRN] Failed to determine the https port for redirect.
+2025-02-01 22:35:44.543 +06:00 [INF] HTTP POST /api/categories responded 401 in 47.4155 ms
+2025-02-01 22:38:11.631 +06:00 [INF] HTTP POST /api/categories responded 401 in 4.2701 ms
+2025-02-01 22:38:11.632 +06:00 [ERR] You are not authorized to access this resource. Please log in with appropriate credentials.

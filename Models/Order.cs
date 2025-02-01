@@ -12,6 +12,6 @@ namespace dotnet_mvc.Models
         public string UserId { get; set; } = null!; // Foreign Key
         public ApplicationUser User { get; set; } = null!;
         public ICollection<OrderedProduct> OrderedProducts { get; set; } = new List<OrderedProduct>();
-}
+    }
 
 }

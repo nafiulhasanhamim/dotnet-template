@@ -17,8 +17,10 @@ namespace dotnet_mvc.Controllers
     public class CategoryController: ControllerBase
     {
         private ICategoryService _categoryService;
-        public CategoryController(ICategoryService categoryService) {
+        private readonly ILogger<CategoryController> _logger;
+        public CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger) {
             _categoryService = categoryService;
+            _logger = logger;
 
         }
 
@@ -29,8 +31,9 @@ namespace dotnet_mvc.Controllers
             //     return Ok(searchCategories);
             //    }
             var categoryList = await _categoryService.GetAllCategories(PageNumber, PageSize, search, sortOrder);
+            _logger.LogInformation("Fetching all categories...");
             // return Ok(categoryList);
-               return ApiResponse.Success(categoryList, "Categories are returned succesfully");
+            return ApiResponse.Success(categoryList, "Categories are returned succesfully");
 
         }
 

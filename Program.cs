@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IUserManagement, UserManagementService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+
 //for redis
 builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
@@ -65,14 +67,19 @@ builder.Services.Configure<IdentityOptions>(
 //configure the CORS policy
 builder.Services.AddCors(opt =>
 {
-    opt.AddPolicy("reactApp", builder =>
+    opt.AddPolicy("AllowAngularApp", builder =>
     {
-        builder.WithOrigins("http://localhost:5000/")
+        builder.WithOrigins("http://localhost:4200", "https://localhost:4200")
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
     });
 });
+
+
+// Load Serilog configuration from appsettings.json
+SerilogConfig.ConfigureLogging(builder.Configuration);
+builder.Host.UseSerilog();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(10));
 // Adding Authentication
@@ -175,6 +182,25 @@ builder.Services.AddSwaggerGen(option =>
 
 var app = builder.Build();
 
+
+//this is required when using docker for automigration
+
+// ✅ **Apply Migrations Automatically for docker**
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     try
+//     {
+//         var context = services.GetRequiredService<AppDbContext>();
+//         context.Database.Migrate(); // Apply pending migrations
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"Migration failed: {ex.Message}");
+//     }
+// }
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -186,6 +212,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<CustomUnauthorizedResponseMiddleware>();
 
 app.UseHttpsRedirection();
+app.UseSerilogRequestLogging(); // Enable logging of HTTP requests
 app.UseAuthentication();
 app.UseAuthorization();
 //signalR setup
@@ -193,6 +220,21 @@ app.MapHub<NotificationHub>("/notificationHub");
 app.MapHub<DemoHub>("/demoHub");
 app.MapHub<AdminHub>("/adminHub");
 app.MapControllers();
+
+try
+{
+    Log.Information("Starting MyApp...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "The application terminated unexpectedly.");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
 //CORS setup
-app.UseCors("reactApp");
+app.UseCors("AllowAngularApp");
 app.Run();

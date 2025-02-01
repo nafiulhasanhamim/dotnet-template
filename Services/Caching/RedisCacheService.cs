@@ -24,12 +24,23 @@ namespace dotnet_mvc.Services.Caching
             {
                 return default(T);
             }
-            return JsonSerializer.Deserialize<T>(data);
+            try
+            {
+                return JsonSerializer.Deserialize<T>(data, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Deserialization error: {ex.Message}");
+                return default;
+            }
         }
 
         public async void RemoveData(string key)
         {
-            _cache!.Remove("products");
+            _cache!.Remove(key);
         }
 
         public async void SetData<T>(string key, T data)

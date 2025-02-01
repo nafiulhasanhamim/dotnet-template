@@ -1,0 +1,6 @@
+2025-02-01 22:34:41.109 +06:00 [INF] Starting MyApp...
+2025-02-01 22:35:06 [Information] Starting MyApp...
+2025-02-01 22:35:44 [Warning] Failed to determine the https port for redirect.
+2025-02-01 22:35:44 [Information] HTTP "POST" "/api/categories" responded 401 in 47.4155 ms
+2025-02-01 22:38:11 [Information] HTTP "POST" "/api/categories" responded 401 in 4.2701 ms
+2025-02-01 22:38:11 [Error] You are not authorized to access this resource. Please log in with appropriate credentials.

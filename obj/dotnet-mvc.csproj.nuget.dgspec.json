@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj": {}
+    "E:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj": {}
   },
   "projects": {
-    "D:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj": {
+    "E:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj",
+        "projectUniqueName": "E:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj",
         "projectName": "dotnet-mvc",
-        "projectPath": "D:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj",
+        "projectPath": "E:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\dotnet-mvc.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "D:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\obj\\",
+        "outputPath": "E:\\FullStack\\.net\\dotnet-template-mvc-with-authentication-authorization\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -98,6 +98,34 @@
             "RabbitMQ.Client": {
               "target": "Package",
               "version": "[6.4.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Serilog.Enrichers.Environment": {
+              "target": "Package",
+              "version": "[3.0.1, )"
+            },
+            "Serilog.Enrichers.Thread": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "Serilog.Settings.Configuration": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Serilog.Sinks.Console": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Serilog.Sinks.Seq": {
+              "target": "Package",
+              "version": "[9.0.0, )"
             },
             "StackExchange.Redis": {
               "target": "Package",

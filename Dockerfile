@@ -1,65 +1,50 @@
-# FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-# WORKDIR /app
-# EXPOSE 80
+# Build Stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+WORKDIR /App
 
-# COPY dotnet-mvc.sln dotnet-mvc.sln
-
-# COPY dotnet-mvc.csproj dotnet-mvc.csproj
-
-# RUN dotnet restore
-
-# COPY . .
-
-# RUN dotnet build -c Release -o /app/build
-
-# FROM build AS publish
-# RUN dotnet publish -c Release -o /app/publish
-
-# Use the official .NET image as the base image
-# FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-# WORKDIR /app
-# EXPOSE 80
-# EXPOSE 443
-
-# Use the SDK image to build the application
-# FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-# WORKDIR /src
-
-# Copy the project file
-# COPY ["dotnet-mvc.csproj", "./"]
-
-# Restore project dependencies
-# RUN dotnet restore
-
-# Copy all source files into the image
-# COPY . .
-
-# Build the project
-# RUN dotnet build -c Release -o /app/build
-
-# Publish the application
-# FROM build AS publish
-# RUN dotnet publish -c Release -o /app/publish
-
-# Use the runtime image to run the application
-# FROM base AS final
-# WORKDIR /app
-# COPY --from=publish /app/publish .
-# ENTRYPOINT ["dotnet", "dotnet-mvc.dll"]
-
-
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS build-env
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-
-COPY *.csproj ./
+# Copy only the project file first (for better caching)
+COPY dotnet-mvc.csproj ./
 RUN dotnet restore
 
-COPY . ./
+# Copy only required source files to prevent security risks
+COPY Program.cs ./Program.cs
+COPY appsettings.json ./appsettings.json
+COPY appsettings.Development.json ./appsettings.Development.json
+
+# Copy all C# source files and resources while avoiding unnecessary files
+COPY Controllers/ ./Controllers
+COPY Models/ ./Models
+COPY Services/ ./Services
+COPY DTO/ ./DTO
+COPY Enums/ ./Enums
+COPY Extensions/ ./Extensions
+COPY Interfaces/ ./Interfaces
+COPY Profiles/ ./Profiles
+COPY Migrations/ ./Migrations
+COPY WeatherAppModel.cs/ ./WeatherAppModel.cs
+COPY data/ ./data
+
+# Build and publish the application
 RUN dotnet publish -c Release -o out
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS final-env
-WORKDIR /app
-COPY --from=build-env /app/out .
+# Runtime Stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /App
+
+# Create a non-root user for security
+RUN adduser --disabled-password --gecos "" appuser \
+    && chown -R appuser:appuser /App
+
+USER appuser
+
+# Copy the published application from the build stage
+COPY --from=build-env /App/out .
+
+# Expose correct port
+EXPOSE 8000
+
+# Set ASP.NET Core to listen on the correct port
+ENV ASPNETCORE_URLS=http://+:8000
+
+# Run the application
 ENTRYPOINT ["dotnet", "dotnet-mvc.dll"]
